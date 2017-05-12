@@ -1,7 +1,7 @@
 from urllib.request import urlopen
-from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import urllib.request
+import urllib.parse
 import re
 import os
 
@@ -49,22 +49,20 @@ listset = list(set(initialscrape.memelist))
 for urlget in listset:
     # Splits up results in order to grab final file name
     urlfilename = urlget.split('/')
-    # Attatches http to url by combining //i.4cdn with the base url ('https://www.boards.4chan')
-    urljoined = urljoin(urlget, url1)
+    # Attatches http to url if not already attatched
+    urljoined = urllib.parse.urlparse(urlget, 'http')
     # Lets user know when is downloading
     try:
         if customfilename.lower() == 'y':
             print('Downloading: ' + definecustomfilename + urlfilename[-1])
             # Joins to requested path, filename is the final name hosted on 4ch
             fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[-1])
-            runcommand = urllib.request.urlretrieve(urljoined, fullfilename)
+            runcommand = urllib.request.urlretrieve(urljoined.geturl(), fullfilename)
             print('File has been succesfully downloaded!')
-            break
         else:
             print('Downloading: ' + urlfilename[-1])
             fullfilename = os.path.join(myPath, urlfilename[-1])
-            runcommand = urllib.request.urlretrieve(urljoined, fullfilename)
+            runcommand = urllib.request.urlretrieve(urljoined.geturl(), fullfilename)
             print('File has been succesfully downloaded!')
-            break
     except Exception as e:
         print('Error. File could not be downloaded. Error: ' + repr(e))
