@@ -61,7 +61,7 @@ for urlget in initialscrape.memelist:
 		if customfilename.lower() == 'y':
 			print('Downloading: ' + definecustomfilename + urlfilename[-1])
 			#Joins to requested path, filename is the final name hosted on 4ch
-			fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[4])
+			fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[-1])
 			runcommand = urllib.request.urlretrieve(url2, fullfilename)
 			print('File has been succesfully downloaded!')
 		else:
