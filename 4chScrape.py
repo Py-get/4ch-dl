@@ -73,4 +73,3 @@ for urlget in initialscrape.memelist:
 		print('File could not be downloaded')
 	#increases list position by 1
 	y = y + 1
-	#Lets user know file has been downloaded succesfully
