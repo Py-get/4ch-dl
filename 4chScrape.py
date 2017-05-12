@@ -2,6 +2,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import urllib.request
 import re
+import random
 import os
 
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -33,34 +34,43 @@ class scrape4ch(object):
 		#checks for optional prefix and adds, adds result onto list
 				self.meme = self.httpaddition + link.get('href')
 				self.memelist.append(self.meme)	
-				
+#gets url to pars into 4ch class				
 url1 = input("Input thread url: \n")
 initialscrape = scrape4ch(url1, "^//i.4cdn", "http:")
-listsize = len(initialscrape.memelist)
-x = 1
+
+#y = position in list. Starting with first.
 y = 0
-customfilename = input('Use custom file name? Y/N \n')
+#Allows for inputting custom prefix eg. character names
+customfilename = input('Use custom file name prefix? Y/N \n')
 if customfilename.lower() == 'y':
 	definecustomfilename = input('Enter custom filename prefix: \n')
-	print('Using prefix %s \n' % (definecustomfilename))
+	print('Using prefix %s ' % (definecustomfilename))
 else:
 	print('Will not use custom filename prefix')
+#Sets up path to download to
 myPath = input("Input folder to download to: \n")
-	
-while True:
+
+#Main loop to run code in	
+for urlget in initialscrape.memelist:
+	#Grabs from list of urls in position y which is increased per repeat
 	url2 = initialscrape.memelist[y]
+	#splits up results in order to grab final file name
 	urlfilename = initialscrape.memelist[y].split('/')
-	if customfilename.lower() == 'y':
-		print('Downloading: ' + definecustomfilename + urlfilename[4])
-		fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[4])
-		runcommand = urllib.request.urlretrieve(url2, fullfilename)
-	else:
-		print('Downloading: ' + urlfilename[4])
-		fullfilename = os.path.join(myPath, urlfilename[4])
-		runcommand = urllib.request.urlretrieve(url2, fullfilename)
+	#Lets user know when is downloading
+	try:
+		if customfilename.lower() == 'y':
+			print('Downloading: ' + definecustomfilename + urlfilename[-1])
+			#Joins to requested path, filename is the final name hosted on 4ch
+			fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[4])
+			runcommand = urllib.request.urlretrieve(url2, fullfilename)
+			print('File has been succesfully downloaded!')
+		else:
+			print('Downloading: ' + urlfilename[-1])
+			fullfilename = os.path.join(myPath, urlfilename[-1])
+			runcommand = urllib.request.urlretrieve(url2, fullfilename)
+			print('File has been succesfully downloaded!')
+	except:
+		print('File could not be downloaded')
+	#increases list position by 1
 	y = y + 1
-	x = x + 1
-	listsize = listsize - 1
-	print('File has been succesfully downloaded!')
-	if listsize == 0:
-		break
+	#Lets user know file has been downloaded succesfully
