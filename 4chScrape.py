@@ -55,7 +55,9 @@ for urlget in initialscrape.memelist:
 	#Grabs from list of urls in position y which is increased per repeat
 	url2 = initialscrape.memelist[y]
 	#splits up results in order to grab final file name
-	urlfilename = initialscrape.memelist[y].split('/')
+	urlfilename = url2.split('/')
+	#increases list position by 1
+	y = y + 1
 	#Lets user know when is downloading
 	try:
 		if customfilename.lower() == 'y':
@@ -71,5 +73,3 @@ for urlget in initialscrape.memelist:
 			print('File has been succesfully downloaded!')
 	except:
 		print('File could not be downloaded')
-	#increases list position by 1
-	y = y + 1
