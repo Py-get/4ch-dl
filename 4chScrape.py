@@ -49,11 +49,12 @@ else:
 	print('Will not use custom filename prefix')
 #Sets up path to download to
 myPath = input("Input folder to download to: \n")
+listset = list(set(initialscrape.memelist))
 
 #Main loop to run code in	
-for urlget in initialscrape.memelist:
+for urlget in listset:
 	#Grabs from list of urls in position y which is increased per repeat
-	url2 = initialscrape.memelist[y]
+	url2 = listset[y]
 	#splits up results in order to grab final file name
 	urlfilename = url2.split('/')
 	#increases list position by 1
