@@ -1,10 +1,14 @@
-from urllib.request import urlopen
+import grequests
+import requests
+import functools
 from bs4 import BeautifulSoup
-import urllib.request
-import urllib.parse
 import re
+import sys
+import getopt
+import urllib.parse
 import os
 
+# Sets up headers
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
@@ -16,53 +20,109 @@ hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML,
 class scrape4ch(object):
     # Requires a url and a prefix to be provided.
     def __init__(self, url, prefix):
+        print('Gathering links...')
         # Allows custom url and prefix when inputted
         self.url = url
         self.prefix = prefix
         # Forces use of headers, opens url etc.
-        self.req = urllib.request.Request(self.url, headers=hdr)
-        self.content = urlopen(self.req).read()
-        self.soup = BeautifulSoup(self.content, "html.parser")
-        # creates list
-        self.memelist = []
+        self.req = requests.get(self.url, headers=hdr)
+        self.soup = BeautifulSoup(self.req.text, "html.parser")
+        self.imagelist = []
         # filters href results to match prefix
         for link in self.soup.findAll('a', attrs={'href': re.compile(self.prefix)}):
-            self.memelist.append(link.get('href'))
+            self.imagelist.append(link.get('href'))
+        print('Links gathered!')
 
 
-# gets url to pars into 4ch class
-url1 = input("Input thread url: \n")
-initialscrape = scrape4ch(url1, "^//i.4cdn")
-# Allows for inputting custom prefix eg. character names
-customfilename = input('Use custom file name prefix? Y/N \n')
-if customfilename.lower() == 'y':
-    definecustomfilename = input('Enter custom filename prefix: \n')
-    print('Using prefix %s ' % (definecustomfilename))
-else:
-    print('Will not use custom filename prefix')
-# Sets up path to download to
-myPath = input("Input folder to download to: \n")
-listset = list(set(initialscrape.memelist))
+if __name__ == '__main__':
+    # Ensures scrape4ch isnt being used in other program
+    # Grabs system arguments
+    def sysargs(argv):
+        arg1 = False
+        arg2 = False
+        global url1
+        global outputpath
+        global prefix
+        url1 = ''
+        outputpath = ''
+        prefix = ''
+        try:
+            opts, args = getopt.getopt(argv, "hu:o:p:", ["help", "url", "output", "prefix"])
+        except getopt.GetoptError:
+            print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
+            sys.exit()
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
+                sys.exit()
+            elif opt in ("-u", "--url"):
+                # Sets the url to user argument
+                url1 = arg
+                arg1 = True
+            elif opt in ("-o", "--output"):
+                outputpath = arg
+                arg2 = True
+            elif opt in ("-p", "--prefix"):
+                prefix = arg
+        # Stops user from not specifying input
+        if arg1 is False:
+            print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
+            sys.exit()
+        # If the user didn't choose output informs them to or will output to home directory
+        if arg2 is False:
+            print('Warning! Will output file to current directory! You did not use -o to specify custom directory. Continue?')
+            userinput = input('Y/N ')
+            if userinput.lower() == 'y':
+                print('Proceeding to output to current directory...')
+            else:
+                print('Use command -h to see help text.')
+                sys.exit()
 
-
-# Main loop to run code in
-for urlget in listset:
-    # Splits up results in order to grab final file name
-    urlfilename = urlget.split('/')
-    # Attatches http to url if not already attatched
-    urljoined = urllib.parse.urlparse(urlget, 'http')
-    # Lets user know when is downloading
-    try:
-        if customfilename.lower() == 'y':
-            print('Downloading: ' + definecustomfilename + urlfilename[-1])
-            # Joins to requested path, filename is the final name hosted on 4ch
-            fullfilename = os.path.join(myPath, definecustomfilename + urlfilename[-1])
-            runcommand = urllib.request.urlretrieve(urljoined.geturl(), fullfilename)
-            print('File has been succesfully downloaded!')
+    def download(url, r, *args, **kwargs):
+        if r.status_code != 200:
+            return
+        # Splits url, takes the file name from the list (final result in list)
+        filename = os.path.split(urllib.parse.urlparse(url).path)[-1]
+        # Checks if user requested prefix
+        if prefix == "":
+            print('Downloading: ' + filename)
+            # If there's no output path specified
+            if outputpath == "":
+                # Writes file to disk in chunks sized 1024 each
+                with open(filename, "wb") as fd:
+                    for chunk in r.iter_content(1024):
+                        fd.write(chunk)
+            else:
+                # Opens custom output path
+                with open(os.path.join(outputpath, filename), "wb") as fd:
+                    for chunk in r.iter_content(1024):
+                        fd.write(chunk)
+            print('File: ' + filename + ' downloaded succesfully!')
         else:
-            print('Downloading: ' + urlfilename[-1])
-            fullfilename = os.path.join(myPath, urlfilename[-1])
-            runcommand = urllib.request.urlretrieve(urljoined.geturl(), fullfilename)
-            print('File has been succesfully downloaded!')
-    except Exception as e:
-        print('Error. File could not be downloaded. Error: ' + repr(e))
+            print('Downloading: ' + prefix + filename)
+            # If there's no output path specified
+            if outputpath == "":
+                with open(prefix + filename, "wb") as fd:
+                    for chunk in r.iter_content(1024):
+                        fd.write(chunk)
+            else:
+                with open(os.path.join(outputpath, prefix + filename), "wb") as fd:
+                    for chunk in r.iter_content(1024):
+                        fd.write(chunk)
+            print('File: ' + prefix + filename + ' downloaded succesfully!')
+        # Prevents "Already Consumed" errors
+        r._content_consumed = False
+
+    def exc_handler(req, exc):
+        print("{} gave error: {}: {}".format(req.url, type(exc).__name__, exc))
+
+    sysargs(sys.argv[1:])
+    initialscrape = scrape4ch(url1, "^//i.4cdn")
+    listset = list(set(initialscrape.imagelist))
+    finishedlist = []
+    for u1 in listset:
+        urljoined = urllib.parse.urlparse(u1, 'http')
+        finishedlist.append(urljoined.geturl())
+
+    fullcommand = [grequests.get(u, headers=hdr, hooks={"response": functools.partial(download, u)}, stream=True) for u in finishedlist]
+    grequests.map(fullcommand, exception_handler=exc_handler)
