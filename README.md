@@ -25,7 +25,7 @@ Long command names for the easily forgetful:
 ```
 
 
-### Warnings and credits:
+## Warnings and credits:
 
 **Please Note:** 
 Due to technical limitations I have been unable to test this on a Unix environment and cannot guarantee it will work. The only OS this has been run on is Windows 7. 
