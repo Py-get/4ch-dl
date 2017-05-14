@@ -4,9 +4,9 @@ import functools
 from bs4 import BeautifulSoup
 import re
 import sys
-import getopt
 import urllib.parse
 import os
+import argparse
 
 # Sets up headers
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -35,94 +35,71 @@ class scrape4ch(object):
 
 
 if __name__ == '__main__':
-    # Ensures scrape4ch isnt being used in other program
-    # Grabs system arguments
-    def sysargs(argv):
-        arg1 = False
-        arg2 = False
-        global url1
-        global outputpath
-        global prefix
-        url1 = ''
-        outputpath = ''
-        prefix = ''
-        try:
-            opts, args = getopt.getopt(argv, "hu:o:p:", ["help", "url", "output", "prefix"])
-        except getopt.GetoptError:
-            print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
-            sys.exit()
-        for opt, arg in opts:
-            if opt in ("-h", "--help"):
-                print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
-                sys.exit()
-            elif opt in ("-u", "--url"):
-                # Sets the url to user argument
-                url1 = arg
-                arg1 = True
-            elif opt in ("-o", "--output"):
-                outputpath = arg
-                arg2 = True
-            elif opt in ("-p", "--prefix"):
-                prefix = arg
-        # Stops user from not specifying input
-        if arg1 is False:
-            print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
-            sys.exit()
-        # If the user didn't choose output informs them to or will output to home directory
-        if arg2 is False:
-            print('Warning! Will output file to current directory! You did not use -o to specify custom directory. Continue?')
-            userinput = input('Y/N ')
-            if userinput.lower() == 'y':
-                print('Proceeding to output to current directory...')
-            else:
-                print('Use command -h to see help text.')
-                sys.exit()
-
     def download(url, r, *args, **kwargs):
         if r.status_code != 200:
             return
         # Splits url, takes the file name from the list (final result in list)
         filename = os.path.split(urllib.parse.urlparse(url).path)[-1]
         # Checks if user requested prefix
-        if prefix == "":
+        if args.prefix == "No prefix specified":
             print('Downloading: ' + filename)
             # If there's no output path specified
-            if outputpath == "":
+            if args.outputpath == "No output specified":
                 # Writes file to disk in chunks sized 1024 each
                 with open(filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
                 # Opens custom output path
-                with open(os.path.join(outputpath, filename), "wb") as fd:
+                with open(os.path.join(args.outputpath, filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             print('File: ' + filename + ' downloaded succesfully!')
         else:
-            print('Downloading: ' + prefix + filename)
+            print('Downloading: ' + args.prefix + filename)
             # If there's no output path specified
-            if outputpath == "":
-                with open(prefix + filename, "wb") as fd:
+            if args.outputpath == "No output specified":
+                with open(args.prefix + filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
-                with open(os.path.join(outputpath, prefix + filename), "wb") as fd:
+                with open(os.path.join(args.outputpath, args.prefix + filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
-            print('File: ' + prefix + filename + ' downloaded succesfully!')
+            print('File: ' + args.prefix + filename + ' downloaded succesfully!')
         # Prevents "Already Consumed" errors
         r._content_consumed = False
 
+    # Exception handler
     def exc_handler(req, exc):
         print("{} gave error: {}: {}".format(req.url, type(exc).__name__, exc))
 
-    sysargs(sys.argv[1:])
-    initialscrape = scrape4ch(url1, "^//i.4cdn")
+    # Defines custom command line arguments, sets -u to be required and displays it in a seperate group entitled required arguments
+    parser = argparse.ArgumentParser(
+        description="Scrape 4chan for URLs")
+    requiredarg = parser.add_argument_group('required arguments')
+    requiredarg.add_argument('-u', '--url', help='Input URL', required=True)
+    parser.add_argument('-o', '--output', help='Specify custom download location', default='No output specified')
+    parser.add_argument('-p', '--prefix', help='Specify custom prefix for file names. E.g character names', default='No prefix specified')
+    args = parser.parse_args()
+    if args.output == 'No output specified':
+        print('Warning! Will output file to current directory! You did not use -o to specify custom directory. Continue?')
+        userinput = input("Y/N ")
+        if userinput.lower() == 'y':
+            print('Using current directory...')
+        else:
+            print('Please specify custom directory with the -o command.')
+            sys.exit()
+
+    initialscrape = scrape4ch(args.url, "^//i.4cdn")
     listset = list(set(initialscrape.imagelist))
+    # Sets up lists, adds http onto them
     finishedlist = []
     for u1 in listset:
-        urljoined = urllib.parse.urlparse(u1, 'http')
+        urljoined = urllib.parse.urlparse(args.url, 'http')
         finishedlist.append(urljoined.geturl())
+    print(args.url)
 
+    # Uses headers, if it gets a response it runs download with value u.
     fullcommand = [grequests.get(u, headers=hdr, hooks={"response": functools.partial(download, u)}, stream=True) for u in finishedlist]
     grequests.map(fullcommand, exception_handler=exc_handler)
