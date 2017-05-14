@@ -3,7 +3,7 @@
 Simple image scraper that downloads images from the imageboard 4chan. Ideal usage is downloading from specific threads.
 
 ## Installation:
-Download latest executable off of the Releases page. I recommend using Cygwin and copying the file to ```C:\cygwin64\bin``` however you can copy the executable to your System32 directory as well. Otherwise you can run the executable through your command prompt of choice.
+Download latest executable off of the Releases page. I recommend using Cygwin and copying the file to ```C:\cygwin64\bin``` however you can copy the executable to your System32 directory as well and then run 4ch-dl in cmd. Otherwise you can open the executable through your command prompt of choice.
 
 Linux users see Warnings and Credits, however hopefully the .py file should run through your terminal as long as you have the requirements installed.
 
