@@ -31,3 +31,7 @@ Long command names for the easily forgetful:
 Due to technical limitations I have been unable to test this on a Unix environment and cannot guarantee it will work. The only OS this has been run on is Windows 7. 
 
 Huge thanks to reddit user destiny_functional for helping me troubleshoot the script and convert to grequests.
+
+
+### Fun Fact:
+The first version of this script was created in under a day. It was later updated to be PEP-8 compliant the following day, and over the next two days rewritten from the ground up to work with command line arguments and grequests.
