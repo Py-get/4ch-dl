@@ -75,14 +75,18 @@ if __name__ == '__main__':
         print("{} gave error: {}: {}".format(req.url, type(exc).__name__, exc))
 
     # Defines custom command line arguments, sets -u to be required and displays it in a seperate group entitled required arguments
-    parser = argparse.ArgumentParser(
-        description="Scrape 4chan for URLs")
+    parser = argparse.ArgumentParser(prog='4ch-dl', description="Scrape 4chan for files", usage='%(prog)s [options]')
     requiredarg = parser.add_argument_group('required arguments')
-    requiredarg.add_argument('-u', '--url', help='Input URL', required=True)
+    requiredarg.add_argument('-u', '--url', help='Input URL', default='No URL provided')
     parser.add_argument('-o', '--output', help='Specify custom download location', default='No output specified')
     parser.add_argument('-p', '--prefix', help='Specify custom prefix for file names. E.g character names', default='No prefix specified')
+    parser.add_argument('-nw', '--nowarning', help='Does not provide a warning when -o is not provided', action='store_true')
     args = parser.parse_args()
-    if args.output == 'No output specified':
+    if args.url == 'No URL provided':
+        parser.error(
+            args.url + '. You must provide atleast one URL using -u\n'
+            'Use --help to see a list of all options')
+    if args.output == 'No output specified' and args.nowarning is False:
         print('Warning! Will output file to current directory! You did not use -o to specify custom directory. Continue?')
         userinput = input("Y/N ")
         if userinput.lower() == 'y':
