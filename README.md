@@ -19,7 +19,7 @@ To append prefix to filename, allowing for easy sorting and/or labelling charact
 ```
 To output to current directory:
 ```
-4ch-dl -u http://boards.4chan.org/cm/thread/3103477/nier-automata-9s-pt2
+4ch-dl -u http://boards.4chan.org/cm/thread/3103477/nier-automata-9s-pt2 -nw
 ```
 Long command names for the easily forgetful:
 ```
@@ -27,6 +27,7 @@ Long command names for the easily forgetful:
 --url
 --output
 --prefix
+--nowarning
 ```
 
 
