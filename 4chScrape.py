@@ -40,9 +40,12 @@ if __name__ == '__main__':
     def sysargs(argv):
         arg1 = False
         arg2 = False
-        sysargs.url1 = ''
-        sysargs.outputpath = ''
-        sysargs.prefix = ''
+        global url1
+        global outputpath
+        global prefix
+        url1 = ''
+        outputpath = ''
+        prefix = ''
         try:
             opts, args = getopt.getopt(argv, "hu:o:p:", ["help", "url", "output", "prefix"])
         except getopt.GetoptError:
@@ -54,13 +57,13 @@ if __name__ == '__main__':
                 sys.exit()
             elif opt in ("-u", "--url"):
                 # Sets the url to user argument
-                sysargs.url1 = arg
+                url1 = arg
                 arg1 = True
             elif opt in ("-o", "--output"):
-                sysargs.outputpath = arg
+                outputpath = arg
                 arg2 = True
             elif opt in ("-p", "--prefix"):
-                sysargs.prefix = arg
+                prefix = arg
         # Stops user from not specifying input
         if arg1 is False:
             print('Correct Usage: -u [thread url] -o [output path]. -h to bring up this text. Also accepts --url and --output. Optionally accepts -p or --prefix for character names etc.')
@@ -81,42 +84,45 @@ if __name__ == '__main__':
         # Splits url, takes the file name from the list (final result in list)
         filename = os.path.split(urllib.parse.urlparse(url).path)[-1]
         # Checks if user requested prefix
-        if sysargs.prefix:
+        if prefix == "":
             print('Downloading: ' + filename)
             # If there's no output path specified
-            if sysargs.outputpath:
+            if outputpath == "":
                 # Writes file to disk in chunks sized 1024 each
-                with open(sysargs.prefix + filename, "wb") as fd:
+                with open(filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
                 # Opens custom output path
-                with open(os.path.join(sysargs.outputpath, filename), "wb") as fd:
+                with open(os.path.join(outputpath, filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
-            print('File: ' + filename + ' dowloaded succesfully!')
+            print('File: ' + filename + ' downloaded succesfully!')
         else:
-            print('Downloading: ' + sysargs.prefix + filename)
+            print('Downloading: ' + prefix + filename)
             # If there's no output path specified
-            if sysargs.outputpath:
-                with open(sysargs.prefix + filename, "wb") as fd:
+            if outputpath == "":
+                with open(prefix + filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
-                with open(os.path.join(sysargs.outputpath, sysargs.prefix + filename), "wb") as fd:
+                with open(os.path.join(outputpath, prefix + filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
-            print('File: ' + sysargs.prefix + filename + ' dowloaded succesfully!')
+            print('File: ' + prefix + filename + ' downloaded succesfully!')
+        # Prevents "Already Consumed" errors
+        r._content_consumed = False
 
     def exc_handler(req, exc):
         print("{} gave error: {}: {}".format(req.url, type(exc).__name__, exc))
 
     sysargs(sys.argv[1:])
-    initialscrape = scrape4ch(sysargs.url1, "^//i.4cdn")
+    initialscrape = scrape4ch(url1, "^//i.4cdn")
     listset = list(set(initialscrape.imagelist))
     finishedlist = []
     for u1 in listset:
         urljoined = urllib.parse.urlparse(u1, 'http')
         finishedlist.append(urljoined.geturl())
-    fullcommand = [grequests.get(u, headers=hdr, hooks={"response": functools.partial(download, u)}, stream=True, exception_handler=exc_handler) for u in finishedlist]
-    grequests.map(fullcommand)
+
+    fullcommand = [grequests.get(u, headers=hdr, hooks={"response": functools.partial(download, u)}, stream=True) for u in finishedlist]
+    grequests.map(fullcommand, exception_handler=exc_handler)
