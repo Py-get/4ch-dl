@@ -1,4 +1,4 @@
-# 4chan Image Scraper (Python)
+# 4ch-dl
 
 Simple image scraper that downloads images from the imageboard 4chan. Ideal usage is downloading from specific threads.
 
