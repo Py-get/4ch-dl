@@ -35,7 +35,7 @@ class scrape4ch(object):
 
 
 if __name__ == '__main__':
-    def download(url, r, *args, **kwargs):
+    def download(url, r, *Args, **kwargs):
         if r.status_code != 200:
             return
         # Splits url, takes the file name from the list (final result in list)
@@ -44,26 +44,26 @@ if __name__ == '__main__':
         if args.prefix == "No prefix specified":
             print('Downloading: ' + filename)
             # If there's no output path specified
-            if args.outputpath == "No output specified":
+            if args.output == "No output specified":
                 # Writes file to disk in chunks sized 1024 each
                 with open(filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
                 # Opens custom output path
-                with open(os.path.join(args.outputpath, filename), "wb") as fd:
+                with open(os.path.join(args.output, filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             print('File: ' + filename + ' downloaded succesfully!')
         else:
             print('Downloading: ' + args.prefix + filename)
             # If there's no output path specified
-            if args.outputpath == "No output specified":
+            if args.output == "No output specified":
                 with open(args.prefix + filename, "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             else:
-                with open(os.path.join(args.outputpath, args.prefix + filename), "wb") as fd:
+                with open(os.path.join(args.output, args.prefix + filename), "wb") as fd:
                     for chunk in r.iter_content(1024):
                         fd.write(chunk)
             print('File: ' + args.prefix + filename + ' downloaded succesfully!')
@@ -100,9 +100,8 @@ if __name__ == '__main__':
     # Sets up lists, adds http onto them
     finishedlist = []
     for u1 in listset:
-        urljoined = urllib.parse.urlparse(args.url, 'http')
+        urljoined = urllib.parse.urlparse(u1, 'http')
         finishedlist.append(urljoined.geturl())
-    print(args.url)
 
     # Uses headers, if it gets a response it runs download with value u.
     fullcommand = [grequests.get(u, headers=hdr, hooks={"response": functools.partial(download, u)}, stream=True) for u in finishedlist]
